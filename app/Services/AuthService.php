@@ -23,7 +23,7 @@ class AuthService
 
         $user = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'username' => $data['username'],
             'password' => bcrypt($data['password']),
         ]);
 
@@ -36,40 +36,36 @@ class AuthService
             ],
         );
     }
-    
+
     public function login($data)
     {
         try {
-            $creds = ['email' => $data['email'], 'password' => $data['password']];
+            $creds = ['username' => $data['username'], 'password' => $data['password']];
             if (!Auth::attempt($creds)) {
                 return $this->error('These credentials do not match our records.', Response::HTTP_UNAUTHORIZED);
             }
-            $user = $this->model->whereEmail($data['email'])->firstOrFail();
-            
+            $user = $this->model->with(['user'])->whereUsername($data['username'])->firstOrFail();
+
             $token = $user->createToken('auth_token')->plainTextToken;
             $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
-            
+
             return $this->success(
-                'You are successfully login. Welcome back ' . $user->full_name . '!',
+                'You are successfully login. Welcome back ' . $user->user->full_name . '!',
                 Response::HTTP_OK,
                 [
-                    'user' => $user,
+                    'user' => new UserResource($user),
                     'token' => $token,
                     'token_type' => 'Bearer',
                     'expires_in' => $now
                 ],
             );
-            // return response([
-            //     'user' => $user,
-            //     'token' => $token,
-            // ],200);
         } catch (Exception $e) {
-            dd($e);
+            // dd($e);
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
 
-    public function user($data)
+    public function userData($data)
     {
         $user = new UserResource($data->user());
         return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => $user]);
@@ -82,32 +78,32 @@ class AuthService
                 'name' => $data['name'],
                 'image' => $image
             ]);
-            return $this->success('Data Successfully Fetched.', Response::HTTP_OK, [$res]);
+            return $this->success('Data Successfully Updated.', Response::HTTP_OK, [$res]);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
 
-    public function checkForPermission($user, $data)
-    {
-        $permission = json_decode($user->role->permission);
+    // public function checkForPermission($user, $data)
+    // {
+    //     $permission = json_decode($user->role->permission);
 
-        $hasPermission = false;
-        if (!$permission) {
-            return $this->error('No Permission', Response::HTTP_BAD_REQUEST);
-        }
-        foreach ($permission as $p) {
-            if ($p->name == $data->path()) {
-                if ($p->read) {
-                    $hasPermission = true;
-                }
-            }
-        }
-        if ($hasPermission) {
-            return 'welcome';
-        }
-        return $this->error('No Permission', Response::HTTP_BAD_REQUEST);
-    }
+    //     $hasPermission = false;
+    //     if (!$permission) {
+    //         return $this->error('No Permission', Response::HTTP_BAD_REQUEST);
+    //     }
+    //     foreach ($permission as $p) {
+    //         if ($p->name == $data->path()) {
+    //             if ($p->read) {
+    //                 $hasPermission = true;
+    //             }
+    //         }
+    //     }
+    //     if ($hasPermission) {
+    //         return 'welcome';
+    //     }
+    //     return $this->error('No Permission', Response::HTTP_BAD_REQUEST);
+    // }
 
     public function logout($data)
     {

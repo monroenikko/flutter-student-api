@@ -27,9 +27,9 @@ class AuthController extends Controller
         return $this->service->login($request->validated());
     }
 
-    public function user(Request $request)
+    public function userData(Request $request)
     {
-        return $this->service->user($request);
+        return $this->service->userData($request);
     }
 
     public function update(Request $request)
@@ -37,8 +37,11 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'required|string'
         ]);
-        $image = $this->saveImage($request->image, 'profiles');
-        return $this->service->user($data, $image);
+        $image = null;
+        if($request->image){
+            $image = $this->saveImage($request->image, 'profiles');
+        }
+        return $this->service->update($data, $image);
     }
 
     public function logout(Request $request)
