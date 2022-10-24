@@ -17,8 +17,8 @@ class ArticleController extends Controller
         return $this->service->index($request);
     }
 
-    public function show($request, $id)
+    public function show($id)
     {
-        return $this->service->show($request, $id);
+        return $this->service->show($id);
     }
 }

@@ -3,31 +3,39 @@ namespace App\Services;
 
 use Exception;
 use App\Models\Article;
-use App\Traits\ResponseApi;
+use App\Traits\{SchoolYear, ResponseApi};
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use App\Http\Resources\RfidListsResource;
-use App\Http\Resources\ArticleListsResource;
+use App\Http\Resources\{ArticleResource, ArticleListsResource};
 
 class ArticleService
 {
-    use ResponseApi;
+    use ResponseApi, SchoolYear;
 
-    protected $model;
-    public function __construct(Article $model)
+    protected $model, $class_record;
+
+    public function __construct(Article $model, ClassRecordService $class_record)
     {
         $this->model = $model;
+        $this->class_record = $class_record;
     }
 
     public function index($request)
     {
-        $data = new ArticleListsResource($this->model->where('status', '1')
-            ->paginate(isset($request->limit) ? $request->limit : 10));
+        $school_year_id = $this->activeSchoolYear()->id;
+        $class_detail =  $this->class_record->hasClassDetail($school_year_id, $sem = null);
+
+        $request['grade_level'] = $class_detail->classDetail->grade_level;
+
+        $data = $this->model
+            ->filter($request)
+            ->paginate(isset($request->limit) ? $request->limit : 10);
+
+        $data = new ArticleListsResource($data);
 
         return $this->success('Data successfully listed.', Response::HTTP_OK, $data);
     }
 
-    public function show($data, int $id)
+    public function show(int $id)
     {
         try {
             $data = $this->model->find($id);
@@ -38,7 +46,7 @@ class ArticleService
             return $this->success(
                 'Data Successfully Fetched.',
                 Response::HTTP_OK,
-                $data->comments()->with('user:id,name,image')->get()
+                new ArticleResource($data)
             );
         } catch (Exception $e) {
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);

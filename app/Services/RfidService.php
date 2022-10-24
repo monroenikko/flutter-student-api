@@ -1,13 +1,10 @@
 <?php
 namespace App\Services;
 
-use App\Models\RfidLog;
 use App\Traits\ResponseApi;
 use Illuminate\Http\Response;
-use App\Models\RfidInformation;
-use App\Models\StudentInformation;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use App\Models\{RfidInformation, StudentInformation, RfidLog};
+use Illuminate\Support\Facades\{DB, Auth};
 use App\Http\Resources\RfidListsResource;
 
 class RfidService
@@ -37,12 +34,11 @@ class RfidService
         $rfidInformation = $this->rfidInformation->where('student_information_id', $profile->id)->first();
 
         $data = new RfidListsResource($this->rfid_logs->where('rfid_information_id', $rfidInformation->id)
-            ->select(DB::raw('Date(created_at) as date'))
-            ->groupBy('date')
-            ->orderBy('date','desc')
-            ->paginate(isset($request->limit) ? $request->limit : 10));
+                ->select(DB::raw('Date(created_at) as date'))
+                ->groupBy('date')
+                ->orderBy('date','desc')
+                ->paginate(isset($request->limit) ? $request->limit : 10));
 
         return $this->success('Data successfully listed.', Response::HTTP_OK, $data);
     }
-
 }
