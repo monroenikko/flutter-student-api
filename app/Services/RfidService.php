@@ -33,6 +33,13 @@ class RfidService
 
         $rfidInformation = $this->rfidInformation->where('student_information_id', $profile->id)->first();
 
+        if(!$rfidInformation)
+        {
+            return $this->error(
+                'No Data Found.', Response::HTTP_BAD_REQUEST, null
+            );
+        }
+
         $data = new RfidListsResource($this->rfid_logs->where('rfid_information_id', $rfidInformation->id)
                 ->select(DB::raw('Date(created_at) as date'))
                 ->groupBy('date')

@@ -4,19 +4,21 @@ namespace App\Services\Auth;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
-use App\Traits\ResponseApi;
+use App\Traits\{SchoolYear, ResponseApi};
 use Illuminate\Http\Response;
+use App\Services\ClassRecordService;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\User\UserResource;
 
 class AuthService
 {
-    use ResponseApi;
-    protected $model;
+    use ResponseApi, SchoolYear;
 
-    public function __construct(User $model)
+    protected $model, $class_record;
+    public function __construct(User $model, ClassRecordService $class_record)
     {
         $this->model = $model;
+        $this->class_record = $class_record;
     }
 
     public function register($data){
@@ -48,7 +50,12 @@ class AuthService
 
             $token = $user->createToken('auth_token')->plainTextToken;
             $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
-
+            $school_year = $this->activeSchoolYear();
+            $class_detail = $this->class_record->hasClassDetail($school_year->id, $sem = null);
+            $user['section'] = $class_detail->classDetail->section->section;
+            $user['grade_level'] = $class_detail->classDetail->section->grade_level;
+            $user['school_year'] = $school_year->school_year;
+            // dd($user);
             return $this->success(
                 'You are successfully login. Welcome back ' . $user->user->full_name . '!',
                 Response::HTTP_OK,
@@ -67,6 +74,11 @@ class AuthService
 
     public function userData($data)
     {
+        $school_year = $this->activeSchoolYear();
+        $class_detail = $this->class_record->hasClassDetail($school_year->id, $sem = null);
+        $data['section'] = $class_detail->classDetail->section->section;
+        $data['grade_level'] = $class_detail->classDetail->section->grade_level;
+        $data['school_year'] = $school_year->school_year;
         $user = new UserResource($data->user());
         return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => $user]);
     }

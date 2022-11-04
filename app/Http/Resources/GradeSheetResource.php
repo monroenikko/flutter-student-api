@@ -17,6 +17,7 @@ class GradeSheetResource extends JsonResource
         return [
             'section' => $this['classDetail']['section']['section'],
             'grade_level' => $this['classDetail']['grade_level'],
+            'adviser' => $this['classDetail']['adviser']['full_name'],
             'grades' => $this['studentEnrolledSubjects']->map( function ($item) use ($request) {
                 return [
                     'subject' => $item['classSubjectDetails']['subjectDetails']['subject'],
@@ -25,7 +26,7 @@ class GradeSheetResource extends JsonResource
                     'sec_g' => (int) $item['sec_g'],
                     'thi_g' => (int) $item['thi_g'],
                     'fou_g' => (int) $item['fou_g'],
-                    'final_g' => $this->finalGrade($item, $request),
+                    'final_g' => $this->finalGrade($item, $request) == 0 ? '' : $this->finalGrade($item, $request),
                     'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'],
                     'order' => $item['classSubjectDetails']['class_subject_order'],
                 ];
@@ -37,54 +38,6 @@ class GradeSheetResource extends JsonResource
 
    private function finalGrade($item, $data)
    {
-        // dd($data['sem']);
-        if($this['classDetail']['grade_level'] >= 11)
-        {
-            switch ($data['sem']) {
-                case 1:
-
-                    $sum = 0;
-                    $first = $item['fir_g'] > 0 ? $item['fir_g'] : 0;
-                    $second = $item['sec_g'] > 0 ? $item['sec_g'] : 0;
-
-                    $sum += $item['fir_g'] > 0 ? $item['fir_g'] : 0;
-                    $sum += $item['sec_g'] > 0 ? $item['sec_g'] : 0;
-
-                    $divisor = 0;
-                    $divisor += $first > 0 ? 1 : 0;
-                    $divisor += $second > 0 ? 1 : 0;
-
-                    $final = 0;
-                    if ($divisor != 0)
-                    {
-                        $final = $sum / $divisor;
-                    }
-
-                    break;
-
-                case 2:
-
-                    $sum = 0;
-                    $first = $item['thi_g'] > 0 ? $item['thi_g'] : 0;
-                    $second = $item['fou_g'] > 0 ? $item['fou_g'] : 0;
-
-                    $sum += $item['thi_g'] > 0 ? $item['thi_g'] : 0;
-                    $sum += $item['fou_g'] > 0 ? $item['fou_g'] : 0;
-
-                    $divisor = 0;
-                    $divisor += $first > 0 ? 1 : 0;
-                    $divisor += $second > 0 ? 1 : 0;
-
-                    $final = 0;
-                    if ($divisor != 0)
-                    {
-                        $final = $sum / $divisor;
-                    }
-
-                    break;
-            }
-        }
-
         if($this['classDetail']['grade_level'] <= 10){
 
             $sum = 0;
@@ -105,11 +58,13 @@ class GradeSheetResource extends JsonResource
             $divisor += $fourth > 0 ? 1 : 0;
 
             $final = 0;
-            if ($divisor != 0)
+            if($first != 0 && $second != 0 && $third != 0 && $fourth != 0)
             {
-                $final = $sum / $divisor;
+                if ($divisor != 0)
+                {
+                    $final = $sum / $divisor;
+                }
             }
-
         }
 
         return $final;

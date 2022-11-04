@@ -8,12 +8,11 @@ use App\Models\Comment;
 use App\Traits\ResponseApi;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Http\ResponseTrait;
 
 class CommentController extends Controller
 {
     use ResponseApi;
-    
+
     public function index($id)
     {
         try {

@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\ArticleResource;
-use phpDocumentor\Reflection\Types\Null_;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ArticleListsResource extends JsonResource

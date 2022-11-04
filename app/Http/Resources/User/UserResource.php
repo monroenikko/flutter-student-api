@@ -31,6 +31,9 @@ class UserResource extends JsonResource
             'age' => $this['user']['age'],
             'religion' => $this['user']['religion'],
             'citizenship' => $this['user']['citizenship'],
+            'grade_level' => $request['grade_level'] ?? $this['grade_level'],
+            'section' => $request['section'] ?? $this['section'],
+            'school_year' => $request['school_year'] ?? $this['school_year'],
             'created_at' => $this['created_at'],
         ];
     }

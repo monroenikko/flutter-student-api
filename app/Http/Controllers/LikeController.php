@@ -5,14 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Like;
 use App\Models\Post;
 use App\Traits\ResponseApi;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Http\ResponseTrait;
 
 class LikeController extends Controller
 {
     use ResponseApi;
-    
+
     public function likeOrUnlike($id)
     {
         $post = Post::find($id);

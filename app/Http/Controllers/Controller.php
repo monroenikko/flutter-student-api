@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\{URL,Storage};
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;

@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     RfidController,
     ArticleController,
     GradeSheetController,
-    SchoolYearController
+    SchoolYearController,
+    ClassDetailController
 };
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,7 +27,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
         Route::get('/{id}', [ArticleController::class, 'show']);
     });
 
-    Route::prefix('gradeSheets')->group(function () {
+    Route::prefix('grade-sheets')->group(function () {
         Route::get('/', [GradeSheetController::class, 'index']);
         Route::get('/{id}', [GradeSheetController::class, 'show']);
     });
@@ -34,6 +35,10 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     Route::prefix('school-years')->group(function () {
         Route::get('/', [SchoolYearController::class, 'index']);
         Route::get('/{id}', [SchoolYearController::class, 'show']);
+    });
+
+    Route::prefix('class-details')->group(function() {
+        Route::get('/', [ClassDetailController::class, 'index']);
     });
 
 });
