@@ -40,6 +40,15 @@ class RfidService
             );
         }
 
+        // return $this->rfid_logs
+        //         ->where('rfid_information_id', $rfidInformation->id)
+        //         ->selectRaw('*')
+        //         // ->groupBy('date')
+        //         ->orderBy('created_at','desc')
+        //         ->paginate(isset($request->limit) ? $request->limit : 10);
+
+        $request['rfid_information_id'] = $rfidInformation->id;
+
         $data = new RfidListsResource($this->rfid_logs->where('rfid_information_id', $rfidInformation->id)
                 ->select(DB::raw('Date(created_at) as date'))
                 ->groupBy('date')

@@ -19,23 +19,14 @@ class RfidListsResource extends JsonResource
     {
         $message = "No Record";
         return [
-            'data' => $this->map(function ($item) use ($message) {
-                $checkin = $this->rfidLogs($item->date, 1)->format('Y-m-d\TH:i:sO');
-                $checkout = $this->rfidLogs($item->date, 0)->format('Y-m-d\TH:i:sO');
-                $checkoutVariable = $this->rfidLogs($item->date, 0)->addHour(2)->format('Y-m-d\TH:i:sO');
+            'data' => $this->map(function ($item) use ($message, $request) {
+                $checkin = $this->rfidLogs($item->date, 1, $request)->format('Y-m-d H:i:s');
+                $checkout = $this->rfidLogs($item->date, 0, $request)->format('Y-m-d H:i:s');
+                $checkoutVariable = $this->rfidLogs($item->date, 0, $request)->addHour(2)->format('Y-m-d H:i:s');
                 return [
-                    "date" => $this->rfidLogs($item->date, NULL) !== NULL ? $this->rfidLogs($item->date, NULL)->format('Y-m-d') : $message,
-                    "checkin" =>  $this->rfidLogs($item->date, 1) !== NULL ? $checkin : $message,
-                    "checkout" => $this->rfidLogs($item->date, 0) !== NULL ? ( $checkoutVariable >= $checkout ? ($checkout === $checkin ? $message : $checkout) : $message) : $message,
-                    // "am" => [
-                    //     "checkin" => $this->rfidLogs($item->date, 1, 0) !== NULL ? $this->rfidLogs($item->date, 1, 0)->format('TH:i:sO') : $message,
-                    // ],
-                    // "pm" => [
-                    //     "checkin" => $this->rfidLogs($item->date, 1, 1) !== NULL ?
-                    //     ($this->rfidLogs($item->date, 1, 0)->format('TH:i:sO') === $this->rfidLogs($item->date, 1, 1)->format('TH:i:sO') ? $message : $this->rfidLogs($item->date, 1, 1)->format('TH:i:sO'))
-                    //     : $message,
-                    //     "checkout" => $this->rfidLogs($item->date, 0, 0) !== NULL ? $this->rfidLogs($item->date, 0, 0)->format('TH:i:sO') : $message,
-                    // ]
+                    "date" => $this->rfidLogs($item->date, NULL, $request) !== NULL ? $this->rfidLogs($item->date, NULL, $request)->format('Y-m-d') : $message,
+                    "checkin" =>  $checkin !== NULL ? $checkin : $message,
+                    "checkout" => isset($checkout) ? ($checkout === $checkin ? $message : $checkout) : $message,
                 ];
             }),
             'pagination' => [
@@ -54,10 +45,14 @@ class RfidListsResource extends JsonResource
         ];
     }
 
-    private function rfidLogs($date, $order)
+    private function rfidLogs($date, $order,$request)
     {
         $sort = ['DESC', 'ASC'];
         $data = RfidLog::whereDate('created_at', '=', $date)
+            ->when($request != [], function($q) use($request){
+                $q->where('rfid_information_id', $request['rfid_information_id']);
+            })
+
             ->when($order !== NULL, function($q) use($sort, $order){
                 $q->orderBy('created_at', $sort[$order]);
             })->first();

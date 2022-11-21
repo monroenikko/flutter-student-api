@@ -21,7 +21,15 @@ class ClassDetailResource extends JsonResource
 		$data1 = $attendance1->days_of_school;
         $data1[]=(string) array_sum($attendance1->days_of_school);
         unset($attendance1->days_of_school);
-        $attendance1->days_of_school = $data1;
+
+        $result = [];
+        foreach($data1 as $value) {
+            if ((int)$value !== 0) {
+                $result[] = (int)$value;
+            }
+        }
+        $attendance1->days_of_school = $result;
+        // dd($attendance1);
 
         return [
             'class_details_id' => $this['class_details_id'],
