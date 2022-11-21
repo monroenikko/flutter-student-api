@@ -24,8 +24,8 @@ class ClassDetailResource extends JsonResource
 
         $result = [];
         foreach($data1 as $value) {
-            if ((int)$value !== 0) {
-                $result[] = (int)$value;
+            if ($value !== 0) {
+                $result[] = (string)$value;
             }
         }
         $attendance1->days_of_school = $result;
