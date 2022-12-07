@@ -1,5 +1,5 @@
 <?php
-namespace App\Services\Auth;
+namespace App\Services;
 
 use Exception;
 use Carbon\Carbon;

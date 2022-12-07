@@ -30,7 +30,7 @@ class ClassRecordService
                     'studentEnrolledSubjects.subjectDetails:id,subject_code,subject',
                 ])
                 ->whereHas('student', function($q) {
-                    $q->where('id', Auth::user()->id);
+                    $q->where('user_id', Auth::user()->id);
                 })
                 ->when($schoolYearId, function($q) use ($schoolYearId) {
                     $q->whereHas('classDetail', function($q) use ($schoolYearId) {
@@ -44,5 +44,4 @@ class ClassRecordService
                 })
                 ->first();
     }
-
 }
