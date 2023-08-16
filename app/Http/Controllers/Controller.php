@@ -17,6 +17,11 @@ class Controller extends BaseController
         if(!$image){
             return null;
         }
+        $imageName = time().'.'.$image->getClientOriginalExtension();
+        $image->move(public_path($path), $imageName);
+        
+        return $imageName;
+
         $filename = time().'.png';
         // save image
         Storage::disk($path)->put($filename, base64_decode($image));

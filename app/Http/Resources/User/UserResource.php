@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\User;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -21,10 +22,10 @@ class UserResource extends JsonResource
             'first_name' => $this['user']['first_name'],
             'middle_name' => $this['user']['middle_name'],
             'last_name' => $this['user']['last_name'],
-            'photo' => "https://sja-bataan.edu.ph/public/img/account/photo/{$this['user']['photo']}",
+            'photo' => config('app.env') === 'production' ? "https://sja-bataan.edu.ph/public/img/account/photo/{$this['user']['photo']}" : "http://localhost:8000/img/account/photo/{$this['user']['photo']}",
             'p_address' => $this['user']['p_address'],
             'c_address' => $this['user']['c_address'],
-            'birthdate' => $this['user']['birthdate'],
+            'birthdate' => Carbon::createFromFormat('Y-m-d H:i:s', $this['user']['birthdate'])->format('Y-m-d') ?: '',
             'contact_number' => $this['user']['contact_number'],
             'gender' => $this['user']['gender'],
             'place_of_birth' => $this['user']['place_of_birth'],

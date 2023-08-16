@@ -17,5 +17,4 @@ class GradeSheetController extends Controller
     {
         return $this->service->getAll($request);
     }
-
 }

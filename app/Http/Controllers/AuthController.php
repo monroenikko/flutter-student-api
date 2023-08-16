@@ -7,6 +7,8 @@ use App\Services\AuthService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\RegistrationRequest;
+use App\Http\Requests\User\StudentProfileRequest;
+use Illuminate\Foundation\Mix;
 
 class AuthController extends Controller
 {
@@ -32,16 +34,14 @@ class AuthController extends Controller
         return $this->service->userData($request);
     }
 
-    public function update(Request $request)
+    public function update(StudentProfileRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string'
-        ]);
         $image = null;
-        if($request->image){
-            $image = $this->saveImage($request->image, 'profiles');
+        $data = $request->validated();
+        if(isset($data['image'])){
+            $image = $this->saveImage($data['image'], public_path('img/account/photo/'));
         }
-        return $this->service->update($data, $image);
+        return $this->service->update((array) $data, $image);
     }
 
     public function logout(Request $request)

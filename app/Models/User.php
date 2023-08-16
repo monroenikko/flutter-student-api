@@ -57,4 +57,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(StudentInformation::class);
     }
+
+    public function audit()
+    {
+        return $this->morphOne(Audit::class, 'auditable');
+    }
+
+    public function subscribes()
+    {
+        return $this->morphOne(Subscription::class, 'subscribable');
+    }
 }

@@ -22,7 +22,7 @@ class ArticleService
     public function index($request)
     {
         $school_year_id = $this->activeSchoolYear()->id;
-        $class_detail =  $this->class_record->hasClassDetail($school_year_id, $sem = null);
+        $class_detail =  $this->class_record->hasClassDetail($school_year_id, $sem = null) ?? $this->class_record->hasClassDetail($school_year_id-1, $sem = null);
 
         $request['grade_level'] = $class_detail->classDetail->grade_level;
 

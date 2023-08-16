@@ -1,23 +1,24 @@
 <?php
 namespace App\Services;
 
-use App\Traits\ResponseApi;
+use App\Traits\{ SchoolYear, ResponseApi };
 use Illuminate\Http\Response;
-use App\Models\{RfidInformation, StudentInformation, RfidLog};
-use Illuminate\Support\Facades\{DB, Auth};
 use App\Http\Resources\RfidListsResource;
+use Illuminate\Support\Facades\{DB, Auth};
+use App\Models\{RfidInformation, StudentInformation, RfidLog};
 
 class RfidService
 {
-    use ResponseApi;
+    use ResponseApi, SchoolYear;
 
-    protected $rfid_logs, $students, $rfidInformation;
+    protected $rfid_logs, $students, $rfidInformation, $schoolYearId;
 
-    public function __construct(RfidLog $rfid_logs, StudentInformation $students, RfidInformation $rfidInformation)
+    public function __construct(StudentInformation $students, RfidInformation $rfidInformation)
     {
-        $this->rfid_logs = $rfid_logs;
+        $this->rfid_logs = DB::table('rfid_logs');
         $this->students = $students;
         $this->rfidInformation = $rfidInformation;
+        $this->schoolYearId = $this->activeSchoolYear()->id;
     }
 
     public function index($request)
@@ -31,7 +32,7 @@ class RfidService
             );
         }
 
-        $rfidInformation = $this->rfidInformation->where('student_information_id', $profile->id)->first();
+        $rfidInformation = $this->rfidInformation->where('student_information_id', $profile->id)->where('school_year_id', $this->schoolYearId)->first();
 
         if(!$rfidInformation)
         {

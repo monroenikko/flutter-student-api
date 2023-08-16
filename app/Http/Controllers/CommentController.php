@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use App\Models\Post;
-use App\Models\Comment;
+use App\Models\{ Post, Comment };
 use App\Traits\ResponseApi;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\{ Request, Response };
 
 class CommentController extends Controller
 {

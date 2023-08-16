@@ -3,26 +3,33 @@ namespace App\Services;
 
 use Exception;
 use Carbon\Carbon;
-use App\Models\User;
-use App\Traits\{SchoolYear, ResponseApi};
+use App\Models\{User, StudentInformation};
 use Illuminate\Http\Response;
 use App\Services\ClassRecordService;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\User\UserResource;
+use App\Traits\{ SchoolYear, ResponseApi };
+use Illuminate\Auth\Events\{ Login, Logout };
+use Illuminate\Support\Facades\{ Auth, Event };
 
 class AuthService
 {
     use ResponseApi, SchoolYear;
 
-    protected $model, $class_record;
+    protected $model, $class_record, $schoolYear;
     public function __construct(User $model, ClassRecordService $class_record)
     {
         $this->model = $model;
         $this->class_record = $class_record;
+        $this->schoolYear = $this->activeSchoolYear();
+    }
+
+    private function classDetail()
+    {
+       return $this->class_record->hasClassDetail($this->schoolYear->id, $sem = null) ?? $this->class_record->hasClassDetail($this->schoolYear->id-1, $sem = null);
     }
 
     public function register($data){
-
+                
         $user = User::create([
             'name' => $data['name'],
             'username' => $data['username'],
@@ -35,7 +42,7 @@ class AuthService
             [
                 'user' => $user,
                 'token' => $user->createToken('secret')->plainTextToken
-            ],
+            ]
         );
     }
 
@@ -50,12 +57,13 @@ class AuthService
 
             $token = $user->createToken('auth_token')->plainTextToken;
             $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
-            $school_year = $this->activeSchoolYear();
-            $class_detail = $this->class_record->hasClassDetail($school_year->id, $sem = null);
-            $user['section'] = $class_detail->classDetail->section->section;
-            $user['grade_level'] = $class_detail->classDetail->section->grade_level;
-            $user['school_year'] = $school_year->school_year;
-            // dd($user);
+            $class_detail = $this->classDetail();
+            $user['section'] = isset($class_detail) ? $class_detail->classDetail->section->section : 'none';
+            $user['grade_level'] = isset($class_detail) ? $class_detail->classDetail->section->grade_level : 'none';
+            $user['school_year'] = $this->schoolYear->school_year;
+
+            Event::dispatch(new Login('api', $user, false)); //fire the login event
+            
             return $this->success(
                 'You are successfully login. Welcome back ' . $user->user->full_name . '!',
                 Response::HTTP_OK,
@@ -64,34 +72,40 @@ class AuthService
                     'token' => $token,
                     'token_type' => 'Bearer',
                     'expires_in' => $now
-                ],
+                ]
             );
         } catch (Exception $e) {
-            // dd($e);
+            dd($e);
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
 
     public function userData($data)
     {
-        $school_year = $this->activeSchoolYear();
-        $class_detail = $this->class_record->hasClassDetail($school_year->id, $sem = null);
-        $data['section'] = $class_detail->classDetail->section->section;
-        $data['grade_level'] = $class_detail->classDetail->section->grade_level;
-        $data['school_year'] = $school_year->school_year;
+        $class_detail = $this->classDetail();
+        $data['section'] = isset($class_detail) ? $class_detail->classDetail->section->section : 'none';
+        $data['grade_level'] = isset($class_detail) ? $class_detail->classDetail->section->grade_level : 'none';
+        $data['school_year'] = $this->schoolYear->school_year;
         $user = new UserResource($data->user());
         return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => $user]);
     }
 
-    public function update($data, $image)
+    public function update(array $data, $image)
     {
         try {
-            $res = auth()->user()->update([
-                'name' => $data['name'],
-                'image' => $image
-            ]);
-            return $this->success('Data Successfully Updated.', Response::HTTP_OK, [$res]);
+            
+            $data['age'] = (int) $data['age'];
+            $data['gender'] = (int) $data['gender'];
+            if($image !== null)
+            {
+                $data['photo'] = $image;
+            }
+            $user = StudentInformation::where('user_id', Auth::user()->id)->first();
+            $user->fill($data)->save();
+            
+            return $this->success('Data Successfully Updated.', Response::HTTP_OK, []);
         } catch (Exception $e) {
+            \Log::error($e);
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
@@ -121,6 +135,7 @@ class AuthService
     {
         try {
             $data->user()->currentAccessToken()->delete();
+            Event::dispatch(new Logout('api', $data->user(), false)); //fire the logout event
             return $this->success('Logged out successfully', Response::HTTP_OK, []);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -134,10 +149,11 @@ class AuthService
             return $this->success(
                 'Successfully Refresh Token.',
                 Response::HTTP_OK,
-                ['token' => $data->user()->createToken('api')->plainTextToken],
+                ['token' => $data->user()->createToken('api')->plainTextToken]
             );
         } catch (Exception $e) {
             return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+    
 }

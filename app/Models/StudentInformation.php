@@ -29,7 +29,8 @@ class StudentInformation extends Model
         'place_of_birth',//
         'no_siblings',//
         'isEsc',
-        'age'
+        'age',
+        'gender',
     ];
 
     public function getFullNameAttribute()

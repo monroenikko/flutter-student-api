@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Resources;
-
+ 
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ClassDetailResource extends JsonResource
@@ -46,7 +46,7 @@ class ClassDetailResource extends JsonResource
             ],
             'attendance_senior1' => [
                 'table_header' => $request['table_header1'],
-                'attendance' => $attendance1,
+                'attendance' => $this->addTotal((object) $attendance1),
                 'days_of_school_total' => array_sum($attendance1->days_of_school),
                 'days_present_total' => array_sum($attendance1->days_present),
                 'days_absent_total' => array_sum($attendance1->days_absent),
@@ -66,7 +66,11 @@ class ClassDetailResource extends JsonResource
     private function addTotal(object $attendance)
     {
         $school = $attendance->days_of_school;
-        $school[]=(string) array_sum($attendance->days_of_school);
+        // this array map is to make/force the integer to string
+        $school = array_map(function($value) {
+            return (string) $value;
+        }, $school);
+        $school[]=(string) array_sum($school);
         unset($attendance->days_of_school);
         $attendance->days_of_school = $school;
 
