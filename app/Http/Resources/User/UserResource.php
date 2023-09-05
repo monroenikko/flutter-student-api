@@ -22,7 +22,7 @@ class UserResource extends JsonResource
             'first_name' => $this['user']['first_name'],
             'middle_name' => $this['user']['middle_name'],
             'last_name' => $this['user']['last_name'],
-            'photo' => config('app.env') === 'production' ? "https://sja-bataan.edu.ph/public/img/account/photo/{$this['user']['photo']}" : "http://localhost:8000/img/account/photo/{$this['user']['photo']}",
+            'photo' => $this['user']['photo'] != '' ? ( config('app.env') === 'production' ? config('app.parent_app')."/public/img/account/photo/{$this['user']['photo']}" : config('app.url')."/img/account/photo/blank-user.gif") : config('app.url')."/img/account/photo/blank-user.gif",
             'p_address' => $this['user']['p_address'],
             'c_address' => $this['user']['c_address'],
             'birthdate' => Carbon::createFromFormat('Y-m-d H:i:s', $this['user']['birthdate'])->format('Y-m-d') ?: '',

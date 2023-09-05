@@ -24,18 +24,19 @@ class StudentProfileRequest extends FormRequest
     public function rules()
     {
         return [
-            'first_name' => 'required|string',
-            'middle_name' => 'required|string',
-            'last_name' => 'required|string',
-            'c_address' => 'required|string',
-            'birthdate' => 'required|string',
-            'p_address' => 'required|string',
-            'age' => 'required|string',
-            'gender' => 'required|string',
-            'birthdate' => 'required|string',
-            'place_of_birth' => 'required|string',
-            'religion' => 'required|string',
-            'citizenship' => 'required|string',
+            'first_name' => 'required|string|max:191',
+            'middle_name' => 'required|string|max:191',
+            'last_name' => 'required|string|max:191',
+            'c_address' => 'required|string|max:191',
+            'birthdate' => 'required|string|max:191',
+            'p_address' => 'required|string|max:191',
+            'age' => 'required|string|max:10',
+            'contact_number' => 'required|string|max:20',
+            'gender' => 'required|string|max:50',
+            'birthdate' => 'required|string|max:50',
+            'place_of_birth' => 'required|string|max:191',
+            'religion' => 'required|string|max:191',
+            'citizenship' => 'required|string|max:191',
             'image' => 'sometimes|image|mimes:jpg,png,jpeg,gif,svg|max:2048'
         ];
     }

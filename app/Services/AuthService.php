@@ -9,7 +9,7 @@ use App\Services\ClassRecordService;
 use App\Http\Resources\User\UserResource;
 use App\Traits\{ SchoolYear, ResponseApi };
 use Illuminate\Auth\Events\{ Login, Logout };
-use Illuminate\Support\Facades\{ Auth, Event };
+use Illuminate\Support\Facades\{ Auth, Event, Log };
 
 class AuthService
 {
@@ -75,7 +75,7 @@ class AuthService
                 ]
             );
         } catch (Exception $e) {
-            dd($e);
+            // dd($e);
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
@@ -93,7 +93,6 @@ class AuthService
     public function update(array $data, $image)
     {
         try {
-            
             $data['age'] = (int) $data['age'];
             $data['gender'] = (int) $data['gender'];
             if($image !== null)
@@ -105,7 +104,7 @@ class AuthService
             
             return $this->success('Data Successfully Updated.', Response::HTTP_OK, []);
         } catch (Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
