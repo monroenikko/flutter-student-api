@@ -29,6 +29,7 @@ class GradeSheetResource extends JsonResource
                     'final_g' => $this->finalGrade($item, $request) == 0 ? '' : $this->finalGrade($item, $request),
                     'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'],
                     'order' => $item['classSubjectDetails']['class_subject_order'],
+                    'status' => $item['status'],
                 ];
             })
             ->sortBy('order')

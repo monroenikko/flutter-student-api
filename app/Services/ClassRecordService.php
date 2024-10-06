@@ -24,7 +24,10 @@ class ClassRecordService
                     'classDetail:id,section_id,school_year_id,adviser_id,grade_level,strand_id,status',
                     'classDetail.section:id,section,grade_level',
                     'classDetail.adviser:id,first_name,middle_name,last_name',
-                    'studentEnrolledSubjects:id,subject_id,enrollments_id,class_subject_details_id,fir_g,sec_g,thi_g,fou_g,status,sem',
+                    'studentEnrolledSubjects' => function($query) {
+                        $query->select('id', 'subject_id', 'enrollments_id', 'class_subject_details_id', 'fir_g', 'sec_g', 'thi_g', 'fou_g', 'status', 'sem')
+                              ->where('status', 1);
+                    },
                     'studentEnrolledSubjects.classSubjectDetails:id,subject_id,faculty_id,class_details_id,class_subject_order,sem',
                     'studentEnrolledSubjects.classSubjectDetails.assignFaculty:id,first_name,middle_name,last_name',
                     'studentEnrolledSubjects.subjectDetails:id,subject_code,subject',

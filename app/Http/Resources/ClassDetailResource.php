@@ -29,15 +29,14 @@ class ClassDetailResource extends JsonResource
             }
         }
         $attendance1->days_of_school = $result;
-        // dd($attendance1);
-
+        
         return [
             'class_details_id' => $this['class_details_id'],
             'section' => $this['classDetail']['section']['section'],
             'grade_level' => $this['classDetail']['grade_level'],
             'adviser' => $this['classDetail']['adviser']['full_name'],
             'attendance_junior' => [
-                'table_header' => $request['table_header'],
+                'table_header' => $this->addTotalHeader($request['table_header']),
                 'attendance' => $this->addTotal((object) $attendance),
                 'days_of_school_total' => array_sum($attendance->days_of_school),
                 'days_present_total' => array_sum($attendance->days_present),
@@ -45,7 +44,7 @@ class ClassDetailResource extends JsonResource
                 'times_tardy_total' => array_sum($attendance->times_tardy),
             ],
             'attendance_senior1' => [
-                'table_header' => $request['table_header1'],
+                'table_header' => $this->addTotalHeader($request['table_header1']),
                 'attendance' => $this->addTotal((object) $attendance1),
                 'days_of_school_total' => array_sum($attendance1->days_of_school),
                 'days_present_total' => array_sum($attendance1->days_present),
@@ -53,7 +52,7 @@ class ClassDetailResource extends JsonResource
                 'times_tardy_total' => array_sum($attendance1->times_tardy),
             ],
             'attendance_senior2' => [
-                'table_header' => $request['table_header2'],
+                'table_header' => $this->addTotalHeader($request['table_header2']),
                 'attendance' => $this->addTotal((object) $attendance2),
                 'days_of_school_total' => array_sum($attendance2->days_of_school),
                 'days_present_total' => array_sum($attendance2->days_present),
@@ -61,6 +60,13 @@ class ClassDetailResource extends JsonResource
                 'times_tardy_total' => array_sum($attendance2->times_tardy),
             ],
         ];
+    }
+
+    private function addTotalHeader($header)
+    {
+        $tHeader =  $header;
+        $tHeader["key"][] = "Total";
+        return $tHeader;
     }
 
     private function addTotal(object $attendance)

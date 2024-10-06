@@ -37,6 +37,7 @@ class StudentProfileRequest extends FormRequest
             'place_of_birth' => 'required|string|max:191',
             'religion' => 'required|string|max:191',
             'citizenship' => 'required|string|max:191',
+            'email' => 'sometimes|string|max:191',
             'image' => 'sometimes|image|mimes:jpg,png,jpeg,gif,svg|max:2048'
         ];
     }

@@ -29,7 +29,7 @@ class AuthService
     }
 
     public function register($data){
-                
+
         $user = User::create([
             'name' => $data['name'],
             'username' => $data['username'],
@@ -53,17 +53,22 @@ class AuthService
             if (!Auth::attempt($creds)) {
                 return $this->error('These credentials do not match our records.', Response::HTTP_UNAUTHORIZED);
             }
-            $user = $this->model->with(['user'])->whereUsername($data['username'])->firstOrFail();
+            $user = $this->model->where('status',1)->with(['user'])->whereUsername($data['username'])->firstOrFail();
 
             $token = $user->createToken('auth_token')->plainTextToken;
+
             $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
             $class_detail = $this->classDetail();
             $user['section'] = isset($class_detail) ? $class_detail->classDetail->section->section : 'none';
             $user['grade_level'] = isset($class_detail) ? $class_detail->classDetail->section->grade_level : 'none';
             $user['school_year'] = $this->schoolYear->school_year;
+            // dd($user);
+            if(!$user)
+            {
+                return $this->error("Sorry, You don't have access, please reach our admin. Thank you", Response::HTTP_BAD_REQUEST);
+            }
+            // Event::dispatch(new Login('api', $user, false)); //fire the login event
 
-            Event::dispatch(new Login('api', $user, false)); //fire the login event
-            
             return $this->success(
                 'You are successfully login. Welcome back ' . $user->user->full_name . '!',
                 Response::HTTP_OK,
@@ -75,7 +80,7 @@ class AuthService
                 ]
             );
         } catch (Exception $e) {
-            // dd($e);
+
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
@@ -101,7 +106,7 @@ class AuthService
             }
             $user = StudentInformation::where('user_id', Auth::user()->id)->first();
             $user->fill($data)->save();
-            
+
             return $this->success('Data Successfully Updated.', Response::HTTP_OK, []);
         } catch (Exception $e) {
             Log::error($e);
@@ -154,5 +159,5 @@ class AuthService
             return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-    
+
 }

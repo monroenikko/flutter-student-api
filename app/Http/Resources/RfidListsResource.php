@@ -31,7 +31,7 @@ class RfidListsResource extends JsonResource
                         ->when($request != [], function($q) use($request){
                             $q->where('rfid_information_id', $request['rfid_information_id']);
                         })
-                        ->orderBy('created_at', 'ASC')
+                        ->orderBy('created_at', 'DESC')
                         ->get()->map(function ($q) use($request){
                             return [
                                 'time' => $q->created_at->format('Y-m-d H:i:s'),

@@ -26,7 +26,7 @@ class ClassDetail extends Model
         return $this->belongsTo(FacultyInformation::class, 'adviser_id', 'id');
     }
 
-    public function classSubjectDetails()
+   public function classSubjectDetails()
     {
         return $this->hasMany(ClassSubjectDetail::class, 'class_details_id', 'id');
     }
