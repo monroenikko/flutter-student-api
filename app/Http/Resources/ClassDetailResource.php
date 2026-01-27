@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Resources;
- 
+
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ClassDetailResource extends JsonResource
@@ -29,7 +29,7 @@ class ClassDetailResource extends JsonResource
             }
         }
         $attendance1->days_of_school = $result;
-        
+        // dd($this->addTotal((object) $attendance));
         return [
             'class_details_id' => $this['class_details_id'],
             'section' => $this['classDetail']['section']['section'],
@@ -37,7 +37,7 @@ class ClassDetailResource extends JsonResource
             'adviser' => $this['classDetail']['adviser']['full_name'],
             'attendance_junior' => [
                 'table_header' => $this->addTotalHeader($request['table_header']),
-                'attendance' => $this->addTotal((object) $attendance),
+                'attendance' => $this->addTotal($attendance),
                 'days_of_school_total' => array_sum($attendance->days_of_school),
                 'days_present_total' => array_sum($attendance->days_present),
                 'days_absent_total' => array_sum($attendance->days_absent),
@@ -69,29 +69,31 @@ class ClassDetailResource extends JsonResource
         return $tHeader;
     }
 
-    private function addTotal(object $attendance)
+    private function addTotal($attendance)
     {
         $school = $attendance->days_of_school;
+
         // this array map is to make/force the integer to string
         $school = array_map(function($value) {
             return (string) $value;
         }, $school);
+
         $school[]=(string) array_sum($school);
         unset($attendance->days_of_school);
         $attendance->days_of_school = $school;
 
-        $present = $attendance->days_present;
-        $present[]=array_sum($attendance->days_present);
+        $present = array_slice($attendance->days_present, 0, count($attendance->days_of_school)-1);
+        $present[]=array_sum($present);
         unset($attendance->days_present);
         $attendance->days_present = $present;
 
-        $absent = $attendance->days_absent;
-        $absent[]= array_sum($attendance->days_absent);
+        $absent = array_slice($attendance->days_absent, 0, count($attendance->days_of_school)-1);
+        $absent[]= array_sum($absent);
         unset($attendance->days_absent);
         $attendance->days_absent = $absent;
 
-        $tardy = $attendance->times_tardy;
-        $tardy[]= array_sum($attendance->times_tardy);
+        $tardy = array_slice($attendance->times_tardy, 0, count($attendance->days_of_school)-1);
+        $tardy[]= array_sum($tardy);
         unset($attendance->times_tardy);
         $attendance->times_tardy = $tardy;
 

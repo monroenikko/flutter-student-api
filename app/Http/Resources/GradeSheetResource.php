@@ -18,7 +18,7 @@ class GradeSheetResource extends JsonResource
             'section' => $this['classDetail']['section']['section'],
             'grade_level' => $this['classDetail']['grade_level'],
             'adviser' => $this['classDetail']['adviser']['full_name'],
-            'grades' => $this['studentEnrolledSubjects']->map( function ($item) use ($request) {
+            'grades' => $this['studentEnrolledSubjects']->map(function ($item) use ($request) {
                 return [
                     'subject' => $item['classSubjectDetails']['subjectDetails']['subject'],
                     'subject_code' => $item['classSubjectDetails']['subjectDetails']['subject_code'],
@@ -27,19 +27,19 @@ class GradeSheetResource extends JsonResource
                     'thi_g' => (int) $item['thi_g'],
                     'fou_g' => (int) $item['fou_g'],
                     'final_g' => $this->finalGrade($item, $request) == 0 ? '' : $this->finalGrade($item, $request),
-                    'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'],
+                    'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'] ?? $item['classSubjectDetails']['teacherSubject']['assignFaculty']['full_name'] ?? 'TBA',
                     'order' => $item['classSubjectDetails']['class_subject_order'],
                     'status' => $item['status'],
                 ];
             })
-            ->sortBy('order')
-            ->toArray()
+                ->sortBy('order')
+                ->toArray()
         ];
-   }
+    }
 
-   private function finalGrade($item, $data)
-   {
-        if($this['classDetail']['grade_level'] <= 10){
+    private function finalGrade($item, $data)
+    {
+        if ($this['classDetail']['grade_level'] <= 10) {
 
             $sum = 0;
             $first = $item->fir_g > 0 ? $item->fir_g : 0;
@@ -59,15 +59,13 @@ class GradeSheetResource extends JsonResource
             $divisor += $fourth > 0 ? 1 : 0;
 
             $final = 0;
-            if($first != 0 && $second != 0 && $third != 0 && $fourth != 0)
-            {
-                if ($divisor != 0)
-                {
+            if ($first != 0 && $second != 0 && $third != 0 && $fourth != 0) {
+                if ($divisor != 0) {
                     $final = $sum / $divisor;
                 }
             }
         }
 
         return $final;
-   }
+    }
 }

@@ -9,11 +9,11 @@ class ClassSubjectDetail extends Model
 {
     use HasFactory;
 
-    protected $table="class_subject_details";
+    protected $table = "class_subject_details";
 
     public function subjectDetails()
     {
-        return $this->belongsTo(SubjectDetail::class, 'subject_id','id');
+        return $this->belongsTo(SubjectDetail::class, 'subject_id', 'id');
     }
 
     // public function studentEnrolledSubjects()
@@ -24,5 +24,10 @@ class ClassSubjectDetail extends Model
     public function assignFaculty()
     {
         return $this->belongsTo(FacultyInformation::class, 'faculty_id', 'id');
+    }
+
+    public function teacherSubject()
+    {
+        return $this->hasOne(TeacherSubject::class, 'class_subject_details_id', 'id');
     }
 }
