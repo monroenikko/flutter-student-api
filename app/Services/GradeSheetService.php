@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\Response;
 use App\Services\ClassRecordService;
-use App\Traits\{SchoolYear,ResponseApi};
+use App\Traits\{SchoolYear, ResponseApi};
 use App\Http\Resources\GradeSheetResource;
 use App\Http\Resources\SeniorGradeSheetResource;
 
@@ -21,7 +21,7 @@ class GradeSheetService
     public function getAll($data)
     {
         $school_year = $this->activeSchoolYear();
-        $class_detail = $this->getClassDetails($school_year->id, $sem = null) ?? $this->getClassDetails($school_year->id-1, $sem = null);
+        $class_detail = $this->getClassDetails($school_year->id, $sem = null) ?? $this->getClassDetails($school_year->id - 1, $sem = null);
 
         $datas = [
             'section' => 'none',
@@ -30,31 +30,39 @@ class GradeSheetService
             'first_sem' => [],
             'second_sem' => [],
         ];
-        
-        if(isset($class_detail)){
+
+        if (isset($class_detail)) {
             $grade_level = $class_detail->classDetail->section->grade_level;
-            if($grade_level >= 11)
-            {
+            if ($grade_level >= 11) {
                 $sem1 = $this->getClassDetails($school_year->id, 1);
-                $sem1['sem'] = 1;
-                $first_sem = isset($sem1) ? new SeniorGradeSheetResource($sem1) : null;
-
-
                 $sem2 = $this->getClassDetails($school_year->id, 2);
-                isset($sem2) ? $sem2['sem'] = 2 : null;
-                $second_sem = isset($sem2) ? new SeniorGradeSheetResource($sem2) : null;
 
-                $datas = [
-                    'section' => $sem1['classDetail']['section']['section'],
-                    'grade_level' => $sem1['classDetail']['grade_level'],
-                    'adviser' => $sem1['classDetail']['adviser']['full_name'],
-                    'first_sem' => $first_sem,
-                    'second_sem' => $second_sem,
-                ];
+                if (isset($sem1)) {
+                    $sem1['sem'] = 1;
+                    $first_sem = new SeniorGradeSheetResource($sem1);
+                } else {
+                    $first_sem = null;
+                }
+
+                if (isset($sem2)) {
+                    $sem2['sem'] = 2;
+                    $second_sem = new SeniorGradeSheetResource($sem2);
+                } else {
+                    $second_sem = null;
+                }
+
+                if (isset($sem1)) {
+                    $datas = [
+                        'section' => $sem1['classDetail']['section']['section'],
+                        'grade_level' => $sem1['classDetail']['grade_level'],
+                        'adviser' => $sem1['classDetail']['adviser']['full_name'],
+                        'first_sem' => $first_sem,
+                        'second_sem' => $second_sem,
+                    ];
+                }
             }
 
-            if($grade_level <= 10)
-            {
+            if ($grade_level <= 10) {
                 $datas = new GradeSheetResource($class_detail);
             }
         }

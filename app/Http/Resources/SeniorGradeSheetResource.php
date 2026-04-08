@@ -14,21 +14,22 @@ class SeniorGradeSheetResource extends JsonResource
      */
     public function toArray($request)
     {
-        // dd($this);
         return [
-            'grades' => $this['studentEnrolledSubjects']->map( function ($item) {
+            'grades' => $this['studentEnrolledSubjects']->filter(function ($item) {
+                return $item['classSubjectDetails']['sem'] == $this['sem'];
+            })->map(function ($item) {
                 return [
                     'subject' => $item['classSubjectDetails']['subjectDetails']['subject'],
                     'subject_code' => $item['classSubjectDetails']['subjectDetails']['subject_code'],
-                    'fir_g' => (int) $item['fir_g'] ?? (int) $item['thi_g'],
-                    'sec_g' => (int) $item['sec_g'] ?? (int) $item['fou_g'],
+                    'fir_g' => (int) $item['fir_g'] != "0.00" ? (int) $item['fir_g'] : (int) $item['thi_g'],
+                    'sec_g' => (int) $item['sec_g'] != "0.00" ? (int) $item['sec_g'] : (int) $item['fou_g'],
                     'final_g' => $this->finalGrade($item) == 0 ? '' : $this->finalGrade($item),
                     'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'],
                     'order' => $item['classSubjectDetails']['class_subject_order'],
                 ];
             })
-            ->sortBy('order')
-            ->toArray()
+                ->sortBy('order')
+                ->toArray()
         ];
     }
 
@@ -36,58 +37,54 @@ class SeniorGradeSheetResource extends JsonResource
     {
         // if($this['classDetail']['grade_level'] >= 11)
         // {
-            // dd($item['sem']);
-            switch ($item['sem']) {
-                case 1:
+        // dd($item['sem']);
+        switch ((int)$item['sem']) {
+            case 1:
 
-                    $sum = 0;
-                    $first = $item['fir_g'] > 0 ? $item['fir_g'] : 0;
-                    $second = $item['sec_g'] > 0 ? $item['sec_g'] : 0;
+                $sum = 0;
+                $first = $item['fir_g'] > 0 ? $item['fir_g'] : 0;
+                $second = $item['sec_g'] > 0 ? $item['sec_g'] : 0;
 
-                    $sum += $item['fir_g'] > 0 ? $item['fir_g'] : 0;
-                    $sum += $item['sec_g'] > 0 ? $item['sec_g'] : 0;
+                $sum += $item['fir_g'] > 0 ? $item['fir_g'] : 0;
+                $sum += $item['sec_g'] > 0 ? $item['sec_g'] : 0;
 
-                    $divisor = 0;
-                    $divisor += $first > 0 ? 1 : 0;
-                    $divisor += $second > 0 ? 1 : 0;
+                $divisor = 0;
+                $divisor += $first > 0 ? 1 : 0;
+                $divisor += $second > 0 ? 1 : 0;
 
-                    $final = 0;
-                    if($first != 0 && $second != 0)
-                    {
-                        if ($divisor != 0)
-                        {
-                            $final = $sum / $divisor;
-                        }
+                $final = 0;
+                if ($first != 0 && $second != 0) {
+                    if ($divisor != 0) {
+                        $final = $sum / $divisor;
                     }
-                    return $final;
+                }
+                return $final;
 
-                    break;
+                break;
 
-                case 2:
+            case 2:
 
-                    $sum = 0;
-                    $first = $item['thi_g'] > 0 ? $item['thi_g'] : 0;
-                    $second = $item['fou_g'] > 0 ? $item['fou_g'] : 0;
+                $sum = 0;
+                $first = $item['thi_g'] > 0 ? $item['thi_g'] : 0;
+                $second = $item['fou_g'] > 0 ? $item['fou_g'] : 0;
 
-                    $sum += $item['thi_g'] > 0 ? $item['thi_g'] : 0;
-                    $sum += $item['fou_g'] > 0 ? $item['fou_g'] : 0;
+                $sum += $item['thi_g'] > 0 ? $item['thi_g'] : 0;
+                $sum += $item['fou_g'] > 0 ? $item['fou_g'] : 0;
 
-                    $divisor = 0;
-                    $divisor += $first > 0 ? 1 : 0;
-                    $divisor += $second > 0 ? 1 : 0;
+                $divisor = 0;
+                $divisor += $first > 0 ? 1 : 0;
+                $divisor += $second > 0 ? 1 : 0;
 
-                    $final = 0;
-                    if($first != 0 && $second != 0)
-                    {
-                        if ($divisor != 0)
-                        {
-                            $final = $sum / $divisor;
-                        }
+                $final = 0;
+                if ($first != 0 && $second != 0) {
+                    if ($divisor != 0) {
+                        $final = $sum / $divisor;
                     }
-                    return $final;
+                }
+                return $final;
 
-                    break;
-            }
+                break;
+        }
         // }
 
     }
