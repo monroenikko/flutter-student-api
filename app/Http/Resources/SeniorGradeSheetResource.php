@@ -23,7 +23,7 @@ class SeniorGradeSheetResource extends JsonResource
                     'subject_code' => $item['classSubjectDetails']['subjectDetails']['subject_code'],
                     'fir_g' => (int) $item['fir_g'] != "0.00" ? (int) $item['fir_g'] : (int) $item['thi_g'],
                     'sec_g' => (int) $item['sec_g'] != "0.00" ? (int) $item['sec_g'] : (int) $item['fou_g'],
-                    'final_g' => $this->finalGrade($item) == 0 ? '' : $this->finalGrade($item),
+                    'final_g' => ($finalGrade = round($this->finalGrade($item))) == 0 ? '' : $finalGrade,
                     'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'],
                     'order' => $item['classSubjectDetails']['class_subject_order'],
                 ];

@@ -26,7 +26,7 @@ class GradeSheetResource extends JsonResource
                     'sec_g' => (int) $item['sec_g'],
                     'thi_g' => (int) $item['thi_g'],
                     'fou_g' => (int) $item['fou_g'],
-                    'final_g' => $this->finalGrade($item, $request) == 0 ? '' : $this->finalGrade($item, $request),
+                    'final_g' => ($finalGrade = round($this->finalGrade($item, $request))) == 0 ? '' : $finalGrade,
                     'faculty' => $item['classSubjectDetails']['assignFaculty']['full_name'] ?? $item['classSubjectDetails']['teacherSubject']['assignFaculty']['full_name'] ?? 'TBA',
                     'order' => $item['classSubjectDetails']['class_subject_order'],
                     'status' => $item['status'],
