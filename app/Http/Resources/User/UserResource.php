@@ -25,7 +25,9 @@ class UserResource extends JsonResource
             'photo' => $this['user']['photo'] != '' || $this['user']['photo'] != NULL ? ( config('app.env') === 'production' ? "https://sja-bataan.edu.ph/public/img/account/photo/{$this['user']['photo']}" : "https://sja-bataan.edu.ph/public/img/account/photo/blank-user.gif") : "https://sja-bataan.edu.ph/public/img/account/photo/blank-user.gif",
             'p_address' => $this['user']['p_address'],
             'c_address' => $this['user']['c_address'],
-            'birthdate' => Carbon::createFromFormat('Y-m-d H:i:s', $this['user']['birthdate'])->format('Y-m-d') ?: '',
+            'birthdate' => $this['user']['birthdate']
+                ? Carbon::parse($this['user']['birthdate'])->format('Y-m-d')
+                : '',
             'contact_number' => $this['user']['contact_number'],
             'gender' => $this['user']['gender'],
             'place_of_birth' => $this['user']['place_of_birth'],

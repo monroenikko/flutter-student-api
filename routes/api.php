@@ -7,12 +7,13 @@ use App\Http\Controllers\{
     ArticleController,
     GradeSheetController,
     SchoolYearController,
-    ClassDetailController
+    ClassDetailController,
+    PaymentRegistionController
 };
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::group(['middleware' => ['auth:sanctum']], function() {
+Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('/user', [AuthController::class, 'userData']);
     Route::put('/user', [AuthController::class, 'update']);
@@ -29,6 +30,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
     Route::prefix('grade-sheets')->group(function () {
         Route::get('/', [GradeSheetController::class, 'index']);
+        Route::get('/school-years', [GradeSheetController::class, 'schoolYears']);
         Route::get('/{id}', [GradeSheetController::class, 'show']);
     });
 
@@ -37,8 +39,11 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
         Route::get('/{id}', [SchoolYearController::class, 'show']);
     });
 
-    Route::prefix('class-details')->group(function() {
+    Route::prefix('class-details')->group(function () {
         Route::get('/', [ClassDetailController::class, 'index']);
     });
 
+    Route::prefix('payment-registrations')->group(function () {
+        Route::get('/', [PaymentRegistionController::class, 'index']);
+    });
 });

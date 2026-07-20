@@ -15,17 +15,21 @@ class AuthService
 {
     use ResponseApi, SchoolYear;
 
-    protected $model, $class_record, $schoolYear;
+    protected $model, $class_record;
     public function __construct(User $model, ClassRecordService $class_record)
     {
         $this->model = $model;
         $this->class_record = $class_record;
-        $this->schoolYear = $this->activeSchoolYear();
     }
 
-    private function classDetail()
+    private function classDetail($schoolYear)
     {
-       return $this->class_record->hasClassDetail($this->schoolYear->id, $sem = null) ?? $this->class_record->hasClassDetail($this->schoolYear->id-1, $sem = null);
+        if (!$schoolYear) {
+            return null;
+        }
+
+        return $this->class_record->hasClassDetail($schoolYear->id, null)
+            ?? $this->class_record->hasClassDetail($schoolYear->id - 1, null);
     }
 
     public function register($data){
@@ -53,20 +57,20 @@ class AuthService
             if (!Auth::attempt($creds)) {
                 return $this->error('These credentials do not match our records.', Response::HTTP_UNAUTHORIZED);
             }
-            $user = $this->model->where('status',1)->with(['user'])->whereUsername($data['username'])->firstOrFail();
+            $user = $this->model->where('status', 1)->with('user')->whereUsername($data['username'])->first();
+            if (!$user || !$user->user) {
+                Auth::logout();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
-            $class_detail = $this->classDetail();
-            $user['section'] = isset($class_detail) ? $class_detail->classDetail->section->section : 'none';
-            $user['grade_level'] = isset($class_detail) ? $class_detail->classDetail->section->grade_level : 'none';
-            $user['school_year'] = $this->schoolYear->school_year;
-            // dd($user);
-            if(!$user)
-            {
                 return $this->error("Sorry, You don't have access, please reach our admin. Thank you", Response::HTTP_BAD_REQUEST);
             }
+
+            $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
+            $schoolYear = $this->activeSchoolYear();
+            $class_detail = $this->classDetail($schoolYear);
+            $user['section'] = data_get($class_detail, 'classDetail.section.section', 'none');
+            $user['grade_level'] = data_get($class_detail, 'classDetail.section.grade_level', 'none');
+            $user['school_year'] = $schoolYear->school_year ?? 'none';
+            $token = $user->createToken('auth_token')->plainTextToken;
             // Event::dispatch(new Login('api', $user, false)); //fire the login event
 
             return $this->success(
@@ -87,10 +91,11 @@ class AuthService
 
     public function userData($data)
     {
-        $class_detail = $this->classDetail();
-        $data['section'] = isset($class_detail) ? $class_detail->classDetail->section->section : 'none';
-        $data['grade_level'] = isset($class_detail) ? $class_detail->classDetail->section->grade_level : 'none';
-        $data['school_year'] = $this->schoolYear->school_year;
+        $schoolYear = $this->activeSchoolYear();
+        $class_detail = $this->classDetail($schoolYear);
+        $data['section'] = data_get($class_detail, 'classDetail.section.section', 'none');
+        $data['grade_level'] = data_get($class_detail, 'classDetail.section.grade_level', 'none');
+        $data['school_year'] = $schoolYear->school_year ?? 'none';
         $user = new UserResource($data->user());
         return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => $user]);
     }

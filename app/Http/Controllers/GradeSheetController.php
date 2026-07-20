@@ -17,4 +17,9 @@ class GradeSheetController extends Controller
     {
         return $this->service->getAll($request);
     }
+
+    public function schoolYears(Request $request)
+    {
+        return $this->service->getSchoolYears();
+    }
 }
