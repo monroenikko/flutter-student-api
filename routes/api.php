@@ -8,7 +8,8 @@ use App\Http\Controllers\{
     GradeSheetController,
     SchoolYearController,
     ClassDetailController,
-    PaymentRegistionController
+    PaymentRegistionController,
+    NotificationController
 };
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -17,7 +18,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('/user', [AuthController::class, 'userData']);
     Route::put('/user', [AuthController::class, 'update']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::post('notifications/{id}/unread', [NotificationController::class, 'markUnread'])->name('notifications.mark-unread');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::post('notifications/unread-all', [NotificationController::class, 'markAllUnread'])->name('notifications.mark-all-unread');
 
     Route::prefix('rfid')->group(function () {
         Route::get('/', [RfidController::class, 'index']);

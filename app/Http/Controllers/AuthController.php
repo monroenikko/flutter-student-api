@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\RegistrationRequest;
 use App\Http\Requests\User\StudentProfileRequest;
@@ -51,5 +52,10 @@ class AuthController extends Controller
     public function refresh(Request $request)
     {
         return $this->service->refresh($request);
+    }
+
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        return $this->service->changePassword($request->validated());
     }
 }

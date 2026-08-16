@@ -9,7 +9,7 @@ use App\Services\ClassRecordService;
 use App\Http\Resources\User\UserResource;
 use App\Traits\{ SchoolYear, ResponseApi };
 use Illuminate\Auth\Events\{ Login, Logout };
-use Illuminate\Support\Facades\{ Auth, Event, Log };
+use Illuminate\Support\Facades\{ Auth, Event, Log, Hash };
 
 class AuthService
 {
@@ -161,6 +161,29 @@ class AuthService
                 ['token' => $data->user()->createToken('api')->plainTextToken]
             );
         } catch (Exception $e) {
+            return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function changePassword(array $data)
+    {
+        try {
+            $user = Auth::user();
+            if (!Hash::check($data['current_password'], $user->password)) {
+                return $this->error('The provided current password does not match your password.', Response::HTTP_BAD_REQUEST);
+            }
+
+            if (Hash::check($data['new_password'], $user->password)) {
+                return $this->error('The new password cannot be the same as your current password.', Response::HTTP_BAD_REQUEST);
+            }
+
+            $user->update([
+                'password' => Hash::make($data['new_password']),
+            ]);
+
+            return $this->success('Password successfully changed.', Response::HTTP_OK, []);
+        } catch (Exception $e) {
+            Log::error($e);
             return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -33,6 +33,13 @@ class StudentInformation extends Model
         'gender',
     ];
 
+    protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'age' => 'integer',
+        'gender' => 'integer',
+    ];
+
     public function getFullNameAttribute()
     {
         return ucwords($this->last_name . ', ' . $this->first_name . ' ' . $this->middle_name);
