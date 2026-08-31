@@ -11,6 +11,8 @@ class SchoolYear extends Model
 
     protected $table="school_years";
 
+    protected $guarded = [];
+
     public function scopeFilter($query)
     {
         return $query->where('status', 1);

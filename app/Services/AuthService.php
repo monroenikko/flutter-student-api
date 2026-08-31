@@ -7,13 +7,13 @@ use App\Models\{User, StudentInformation};
 use Illuminate\Http\Response;
 use App\Services\ClassRecordService;
 use App\Http\Resources\User\UserResource;
-use App\Traits\{ SchoolYear, ResponseApi };
+use App\Traits\{ SchoolYear, ResponseApi, HasSiblingAccess };
 use Illuminate\Auth\Events\{ Login, Logout };
 use Illuminate\Support\Facades\{ Auth, Event, Log, Hash };
 
 class AuthService
 {
-    use ResponseApi, SchoolYear;
+    use ResponseApi, SchoolYear, HasSiblingAccess;
 
     protected $model, $class_record;
     public function __construct(User $model, ClassRecordService $class_record)
@@ -64,14 +64,16 @@ class AuthService
                 return $this->error("Sorry, You don't have access, please reach our admin. Thank you", Response::HTTP_BAD_REQUEST);
             }
 
-            $now = Carbon::now()->addMinutes(config('sanctum.expiration'));
+            $expiresIn = config('sanctum.expiration')
+                ? Carbon::now()->addMinutes((int) config('sanctum.expiration'))
+                : null;
             $schoolYear = $this->activeSchoolYear();
             $class_detail = $this->classDetail($schoolYear);
             $user['section'] = data_get($class_detail, 'classDetail.section.section', 'none');
             $user['grade_level'] = data_get($class_detail, 'classDetail.section.grade_level', 'none');
             $user['school_year'] = $schoolYear->school_year ?? 'none';
             $token = $user->createToken('auth_token')->plainTextToken;
-            // Event::dispatch(new Login('api', $user, false)); //fire the login event
+            Event::dispatch(new Login('api', $user, false)); //fire the login event
 
             return $this->success(
                 'You are successfully login. Welcome back ' . $user->user->full_name . '!',
@@ -80,7 +82,7 @@ class AuthService
                     'user' => new UserResource($user),
                     'token' => $token,
                     'token_type' => 'Bearer',
-                    'expires_in' => $now
+                    'expires_in' => $expiresIn
                 ]
             );
         } catch (Exception $e) {
@@ -91,13 +93,35 @@ class AuthService
 
     public function userData($data)
     {
+        $studentId = $data->get('student_id');
+        $student = $studentId ? $this->getAuthorizedStudent($studentId) : null;
+
         $schoolYear = $this->activeSchoolYear();
         $class_detail = $this->classDetail($schoolYear);
-        $data['section'] = data_get($class_detail, 'classDetail.section.section', 'none');
-        $data['grade_level'] = data_get($class_detail, 'classDetail.section.grade_level', 'none');
-        $data['school_year'] = $schoolYear->school_year ?? 'none';
-        $user = new UserResource($data->user());
-        return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => $user]);
+        $section = data_get($class_detail, 'classDetail.section.section', 'none');
+        $grade_level = data_get($class_detail, 'classDetail.section.grade_level', 'none');
+        $school_year = $schoolYear->school_year ?? 'none';
+
+        $data['section'] = $section;
+        $data['grade_level'] = $grade_level;
+        $data['school_year'] = $school_year;
+
+        $authUser = $data->user();
+        $playerId = $data->get('player_id');
+        $this->syncSiblingSubscriptions($authUser, $playerId);
+
+        if ($student) {
+            $user = ($student->user_id ? User::with('user')->where('id', $student->user_id)->first() : null) ?? clone $authUser;
+            $user->setRelation('user', $student);
+        } else {
+            $user = $authUser;
+        }
+
+        $user['section'] = $section;
+        $user['grade_level'] = $grade_level;
+        $user['school_year'] = $school_year;
+
+        return $this->success('Successfully fetch', Response::HTTP_OK, ['user' => new UserResource($user)]);
     }
 
     public function update(array $data, $image)

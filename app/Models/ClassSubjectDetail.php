@@ -30,4 +30,19 @@ class ClassSubjectDetail extends Model
     {
         return $this->hasOne(TeacherSubject::class, 'class_subject_details_id', 'id');
     }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'room_id', 'id');
+    }
+
+    public function classDetail()
+    {
+        return $this->belongsTo(ClassDetail::class, 'class_details_id', 'id');
+    }
+
+    public function subjectCategory()
+    {
+        return $this->belongsTo(SubjectCategory::class, 'subject_category_id', 'id');
+    }
 }

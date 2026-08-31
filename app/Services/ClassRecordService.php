@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\{Enrollment, ClassDetail, StudentInformation};
-use App\Traits\ResponseApi;
+use App\Traits\{ResponseApi, HasSiblingAccess};
 use Illuminate\Support\Facades\Auth;
 
 class ClassRecordService
 {
-    use ResponseApi;
+    use ResponseApi, HasSiblingAccess;
 
     protected $class_details, $enrollment, $studentInformation;
 
@@ -22,19 +22,23 @@ class ClassRecordService
     public function hasClassDetail($schoolYearId, $sem)
     {
         return  $this->enrollment->with([
-            'classDetail:id,section_id,school_year_id,adviser_id,grade_level,strand_id,status',
+            'classDetail:id,section_id,school_year_id,adviser_id,grade_level,term_type,strand_id,status',
             'classDetail.section:id,section,grade_level',
             'classDetail.adviser:id,first_name,middle_name,last_name',
             'studentEnrolledSubjects' => function ($query) {
-                $query->select('id', 'subject_id', 'enrollments_id', 'class_subject_details_id', 'fir_g', 'sec_g', 'thi_g', 'fou_g', 'status', 'sem')
+                $query->select('id', 'subject_id', 'sub_subject_id', 'enrollments_id', 'class_subject_details_id', 'fir_g', 'sec_g', 'thi_g', 'fou_g', 'status', 'sem')
                     ->where('status', 1);
             },
-            'studentEnrolledSubjects.classSubjectDetails:id,subject_id,faculty_id,class_details_id,class_subject_order,sem',
+            'studentEnrolledSubjects.classSubjectDetails:id,subject_id,faculty_id,class_details_id,class_subject_order,sem,subject_category_id',
             'studentEnrolledSubjects.classSubjectDetails.assignFaculty:id,first_name,middle_name,last_name',
-            'studentEnrolledSubjects.subjectDetails:id,subject_code,subject',
+            'studentEnrolledSubjects.classSubjectDetails.subjectCategory:id,code,name',
+            'studentEnrolledSubjects.subjectDetails:id,subject_code,subject,subject_category_id',
+            'studentEnrolledSubjects.subjectDetails.subjectCategory:id,code,name',
+            'studentEnrolledSubjects.subSubject:id,sub_subject_code,sub_subject,units',
         ])
             ->whereHas('student', function ($q) {
-                $q->where('user_id', Auth::user()->id);
+                $student = $this->getAuthorizedStudent(request('student_id'));
+                $q->where('id', $student ? $student->id : 0);
             })
             ->when($schoolYearId, function ($q) use ($schoolYearId) {
                 $q->whereHas('classDetail', function ($q) use ($schoolYearId) {

@@ -10,4 +10,6 @@ class DiscountFee extends Model
     use HasFactory;
 
     protected $table = "discount_fees";
+
+    protected $guarded = [];
 }

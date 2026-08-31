@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use Exception;
-use App\Traits\AuditLog;
+use App\Traits\{AuditLog, HasSiblingAccess};
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Login;
@@ -13,7 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 
 class LoginListener
 {
-    use AuditLog;
+    use AuditLog, HasSiblingAccess;
     private $request;
     /**
      * Create the event listener.
@@ -40,7 +40,7 @@ class LoginListener
             ];
 
             $this->createLog($event->user, $this->request, $data);
-            $playerId = $this->request->player_id ?? null;
+            $playerId = $this->request->player_id ?? $this->request->get('player_id') ?? request('player_id') ?? null;
             if($playerId)
             {
                 $isSubscribed = Subscription::where('subscribable_id', $event->user->id)
@@ -55,9 +55,13 @@ class LoginListener
                     $event->user->subscribes()->create($subscriber);
                 }
             }
+
+            // Sync subscription across all siblings in the sibling group
+            $this->syncSiblingSubscriptions($event->user, $playerId);
+
             return true;
         } catch (Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error($e);
             return false;
         }

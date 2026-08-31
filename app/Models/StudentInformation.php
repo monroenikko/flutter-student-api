@@ -92,6 +92,29 @@ class StudentInformation extends Model
         return $this->hasOne(Transaction::class, 'student_id', 'id')->where('school_year_id', $school_year_id);
     }
 
+    /**
+     * Get the sibling group membership for this student.
+     */
+    public function siblingGroupMember()
+    {
+        return $this->hasOne(SiblingGroupMember::class, 'student_information_id', 'id');
+    }
+
+    /**
+     * Get all linked siblings (students in the same sibling group, excluding self).
+     */
+    public function linkedSiblings()
+    {
+        $member = $this->siblingGroupMember;
+        if (!$member) {
+            return collect();
+        }
+
+        return static::whereHas('siblingGroupMember', function ($q) use ($member) {
+            $q->where('sibling_group_id', $member->sibling_group_id);
+        })->where('id', '!=', $this->id)->get();
+    }
+
     public static function studentInfo()
     {
         return static::with([

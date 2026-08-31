@@ -10,4 +10,6 @@ class DownpaymentFee extends Model
     use HasFactory;
 
     protected $table = "downpayment_fees";
+
+    protected $guarded = [];
 }

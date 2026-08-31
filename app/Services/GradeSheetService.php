@@ -4,16 +4,17 @@ namespace App\Services;
 
 use Illuminate\Http\Response;
 use App\Services\ClassRecordService;
-use App\Traits\{SchoolYear, ResponseApi};
+use App\Traits\{SchoolYear, ResponseApi, HasSiblingAccess};
 use App\Http\Resources\GradeSheetResource;
 use App\Http\Resources\SeniorGradeSheetResource;
 use App\Models\StudentInformation;
 use Illuminate\Support\Facades\Auth;
+use App\Models\GradeReleaseSchedule;
 use App\Models\SchoolYear as SchoolYearModel;
 
 class GradeSheetService
 {
-    use ResponseApi, SchoolYear;
+    use ResponseApi, SchoolYear, HasSiblingAccess;
 
     protected $classRecordService;
     public function __construct(ClassRecordService $classRecordService)
@@ -23,6 +24,11 @@ class GradeSheetService
 
     public function getAll($data)
     {
+        $student = $this->student();
+        if (!$student) {
+            return $this->error('Student information not found.', Response::HTTP_NOT_FOUND);
+        }
+
         $schoolYearId = $data->get('school_year_id');
 
         if ($schoolYearId) {
@@ -33,50 +39,76 @@ class GradeSheetService
             $class_detail = $this->getClassDetails($school_year->id, $sem = null);
         } else {
             $school_year = $this->activeSchoolYear();
-            $class_detail = $this->getClassDetails($school_year->id, $sem = null) ?? $this->getClassDetails($school_year->id - 1, $sem = null);
+            $class_detail = $school_year
+                ? ($this->getClassDetails($school_year->id, $sem = null) ?? $this->getClassDetails($school_year->id - 1, $sem = null))
+                : null;
         }
 
         $datas = [
             'section' => 'none',
             'grade_level' => 'none',
             'adviser' => 'none',
+            'grade_release_schedules' => [],
             'first_sem' => [],
             'second_sem' => [],
         ];
 
         if (isset($class_detail)) {
-            $grade_level = $class_detail->classDetail->section->grade_level;
-            if ($grade_level >= 11) {
-                $sem1 = $this->getClassDetails($school_year->id, 1);
-                $sem2 = $this->getClassDetails($school_year->id, 2);
+            $term_type = $class_detail->classDetail->term_type ?? 'old';
+            $grade_level = $class_detail->classDetail->section->grade_level ?? $class_detail->classDetail->grade_level ?? 0;
 
-                if (isset($sem1)) {
-                    $sem1['sem'] = 1;
-                    $first_sem = new SeniorGradeSheetResource($sem1);
-                } else {
-                    $first_sem = null;
-                }
+            $releaseSchedules = collect();
+            if (isset($school_year)) {
+                $releaseSchedules = GradeReleaseSchedule::where('school_year_id', $school_year->id)
+                    ->where('term_type', $term_type)
+                    ->orderBy('term')
+                    ->get();
 
-                if (isset($sem2)) {
-                    $sem2['sem'] = 2;
-                    $second_sem = new SeniorGradeSheetResource($sem2);
-                } else {
-                    $second_sem = null;
-                }
-
-                if (isset($sem1)) {
-                    $datas = [
-                        'section' => $sem1['classDetail']['section']['section'],
-                        'grade_level' => $sem1['classDetail']['grade_level'],
-                        'adviser' => $sem1['classDetail']['adviser']['full_name'],
-                        'first_sem' => $first_sem,
-                        'second_sem' => $second_sem,
-                    ];
+                if ($releaseSchedules->isEmpty()) {
+                    $releaseSchedules = GradeReleaseSchedule::where('school_year_id', $school_year->id)
+                        ->orderBy('term')
+                        ->get();
                 }
             }
 
-            if ($grade_level <= 10) {
-                $datas = new GradeSheetResource($class_detail);
+            if ($term_type === 'new') {
+                $datas = new GradeSheetResource($class_detail, $releaseSchedules);
+            } else {
+                if ($grade_level >= 11) {
+                    $sem1 = $this->getClassDetails($school_year->id, 1);
+                    $sem2 = $this->getClassDetails($school_year->id, 2);
+
+                    if (isset($sem1)) {
+                        $sem1['sem'] = 1;
+                        $first_sem = new SeniorGradeSheetResource($sem1, $releaseSchedules);
+                    } else {
+                        $first_sem = null;
+                    }
+
+                    if (isset($sem2)) {
+                        $sem2['sem'] = 2;
+                        $second_sem = new SeniorGradeSheetResource($sem2, $releaseSchedules);
+                    } else {
+                        $second_sem = null;
+                    }
+
+                    $target = $sem1 ?? $sem2;
+                    if ($target) {
+                        $datas = [
+                            'section' => $target['classDetail']['section']['section'] ?? $class_detail->classDetail->section->section ?? 'none',
+                            'grade_level' => $target['classDetail']['grade_level'] ?? $class_detail->classDetail->grade_level ?? 'none',
+                            'term_type' => 'old',
+                            'adviser' => $target['classDetail']['adviser']['full_name'] ?? $class_detail->classDetail->adviser->full_name ?? 'none',
+                            'grade_release_schedules' => GradeSheetResource::formatSchedules($releaseSchedules),
+                            'first_sem' => $first_sem,
+                            'second_sem' => $second_sem,
+                        ];
+                    }
+                }
+
+                if ($grade_level <= 10) {
+                    $datas = new GradeSheetResource($class_detail, $releaseSchedules);
+                }
             }
         }
 
@@ -112,6 +144,6 @@ class GradeSheetService
 
     private function student()
     {
-        return StudentInformation::where('user_id', Auth::user()->id)->first();
+        return $this->getAuthorizedStudent(request('student_id'));
     }
 }

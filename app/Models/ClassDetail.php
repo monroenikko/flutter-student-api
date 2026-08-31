@@ -9,7 +9,19 @@ class ClassDetail extends Model
 {
     use HasFactory;
 
-    protected $table="class_details";
+    protected $table = "class_details";
+
+    protected $fillable = [
+        'school_year_id',
+        'section_id',
+        'room_id',
+        'adviser_id',
+        'grade_level',
+        'term_type',
+        'strand_id',
+        'current',
+        'status',
+    ];
 
     public function enrollment()
     {
@@ -29,5 +41,15 @@ class ClassDetail extends Model
    public function classSubjectDetails()
     {
         return $this->hasMany(ClassSubjectDetail::class, 'class_details_id', 'id');
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'room_id', 'id');
+    }
+
+    public function schoolYear()
+    {
+        return $this->belongsTo(SchoolYear::class, 'school_year_id', 'id');
     }
 }

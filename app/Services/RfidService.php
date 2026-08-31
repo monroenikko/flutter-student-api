@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Traits\{ SchoolYear, ResponseApi };
+use App\Traits\{ SchoolYear, ResponseApi, HasSiblingAccess };
 use Illuminate\Http\Response;
 use App\Http\Resources\RfidListsResource;
 use Illuminate\Support\Facades\{DB, Auth};
@@ -9,7 +9,7 @@ use App\Models\{RfidInformation, StudentInformation, RfidLog};
 
 class RfidService
 {
-    use ResponseApi, SchoolYear;
+    use ResponseApi, SchoolYear, HasSiblingAccess;
 
     protected $rfid_logs, $students, $rfidInformation, $schoolYearId;
 
@@ -23,7 +23,7 @@ class RfidService
 
     public function index($request)
     {
-        $profile = $this->students->where('user_id', Auth::user()->id)->first();
+        $profile = $this->getAuthorizedStudent(request('student_id'));
 
         if(!$profile)
         {

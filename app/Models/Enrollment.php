@@ -11,6 +11,16 @@ class Enrollment extends Model
 
     protected $table="enrollments";
 
+    protected $fillable = [
+        'student_information_id',
+        'class_details_id',
+        'attendance',
+        'attendance_first',
+        'attendance_second',
+        'attendance_third',
+        'status',
+    ];
+
     public function student()
     {
         return $this->hasOne(StudentInformation::class, 'id', 'student_information_id');

@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Services\SchoolYearService;
-use App\Traits\ResponseApi;
+use App\Traits\{ResponseApi, HasSiblingAccess};
 use App\Models\StudentInformation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class SchoolYearController extends Controller
 {
-    use ResponseApi;
+    use ResponseApi, HasSiblingAccess;
 
     protected $service;
 
@@ -21,7 +21,10 @@ class SchoolYearController extends Controller
 
     public function index(Request $request)
     {
-        $studentInformation = StudentInformation::studentInfo();
+        $studentId = $request->get('student_id');
+        $studentInformation = $studentId
+            ? $this->getAuthorizedStudent($studentId)
+            : StudentInformation::studentInfo();
 
         if (!$studentInformation) {
             return $this->error('Student information not found.', Response::HTTP_NOT_FOUND);
@@ -39,6 +42,6 @@ class SchoolYearController extends Controller
 
     private function student()
     {
-        return StudentInformation::where('user_id', auth()->id())->first();
+        return $this->getAuthorizedStudent(request('student_id'));
     }
 }
