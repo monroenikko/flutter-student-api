@@ -29,9 +29,10 @@ class ClassRecordService
                 $query->select('id', 'subject_id', 'sub_subject_id', 'enrollments_id', 'class_subject_details_id', 'fir_g', 'sec_g', 'thi_g', 'fou_g', 'status', 'sem')
                     ->where('status', 1);
             },
-            'studentEnrolledSubjects.classSubjectDetails:id,subject_id,faculty_id,class_details_id,class_subject_order,sem,subject_category_id',
+            'studentEnrolledSubjects.classSubjectDetails:id,subject_id,faculty_id,class_details_id,class_subject_order,sem',
             'studentEnrolledSubjects.classSubjectDetails.assignFaculty:id,first_name,middle_name,last_name',
-            'studentEnrolledSubjects.classSubjectDetails.subjectCategory:id,code,name',
+            'studentEnrolledSubjects.classSubjectDetails.subjectDetails:id,subject_code,subject,subject_category_id',
+            'studentEnrolledSubjects.classSubjectDetails.subjectDetails.subjectCategory:id,code,name',
             'studentEnrolledSubjects.subjectDetails:id,subject_code,subject,subject_category_id',
             'studentEnrolledSubjects.subjectDetails.subjectCategory:id,code,name',
             'studentEnrolledSubjects.subSubject:id,sub_subject_code,sub_subject,units',

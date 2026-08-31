@@ -43,6 +43,6 @@ class ClassSubjectDetail extends Model
 
     public function subjectCategory()
     {
-        return $this->belongsTo(SubjectCategory::class, 'subject_category_id', 'id');
+        return $this->hasOneThrough(SubjectCategory::class, SubjectDetail::class, 'id', 'id', 'subject_id', 'subject_category_id');
     }
 }

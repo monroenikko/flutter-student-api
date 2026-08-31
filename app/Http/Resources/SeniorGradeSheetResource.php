@@ -58,10 +58,11 @@ class SeniorGradeSheetResource extends JsonResource
                 );
                 $isSubSubject = $hasSubSubjectId || $isKnownSubComponent;
 
-                $categoryCode = $item['classSubjectDetails']['subjectCategory']['code'] 
-                    ?? $item['subjectDetails']['subjectCategory']['code'] 
-                    ?? $item->classSubjectDetails->subjectCategory->code 
-                    ?? $item->subjectDetails->subjectCategory->code 
+                $categoryCode = $item['classSubjectDetails']['subjectDetails']['subjectCategory']['code']
+                    ?? $item['subjectDetails']['subjectCategory']['code']
+                    ?? ($item->classSubjectDetails->subjectDetails->subjectCategory->code ?? null)
+                    ?? ($item->subjectDetails->subjectCategory->code ?? null)
+                    ?? ($item->classSubjectDetails->subjectCategory->code ?? null)
                     ?? 'core';
                 $isElective = strtolower((string) $categoryCode) === 'elective';
 
