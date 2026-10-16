@@ -14,7 +14,8 @@ use App\Http\Controllers\{
     PaymentRegistionController,
     NotificationController,
     SiblingController,
-    SchoolCalendarController
+    SchoolCalendarController,
+    LibraryController
 };
 
 Route::get('/check-app-update', [AppVersionController::class, 'check']);
@@ -83,5 +84,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::prefix('school-calendar')->group(function () {
         Route::get('/', [SchoolCalendarController::class, 'index'])->name('school-calendar.index');
         Route::get('/{id}', [SchoolCalendarController::class, 'show'])->name('school-calendar.show');
+    });
+
+    Route::prefix('library')->group(function () {
+        Route::get('/borrow-history', [LibraryController::class, 'borrowHistory'])->name('library.borrow-history');
+        Route::get('/borrow-history/{id}', [LibraryController::class, 'borrowDetail'])->name('library.borrow-detail');
+        Route::get('/books', [LibraryController::class, 'books'])->name('library.books');
+        Route::get('/books/{id}', [LibraryController::class, 'bookDetail'])->name('library.book-detail');
+        Route::get('/categories', [LibraryController::class, 'categories'])->name('library.categories');
     });
 });

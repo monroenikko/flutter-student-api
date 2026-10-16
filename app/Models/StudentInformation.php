@@ -92,6 +92,11 @@ class StudentInformation extends Model
         return $this->hasOne(Transaction::class, 'student_id', 'id')->where('school_year_id', $school_year_id);
     }
 
+    public function bookTransactions()
+    {
+        return $this->hasMany(BookTransaction::class, 'student_id', 'id');
+    }
+
     /**
      * Get the sibling group membership for this student.
      */
